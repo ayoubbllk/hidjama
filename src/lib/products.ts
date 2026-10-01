@@ -29,7 +29,7 @@ export const products: Product[] = [
     name: "كؤوس الحجامة الإسلامية",
     subtitle: "قياس 4-5-6",
     refs: ["4", "5", "6"],
-    price: 180,
+    price: 170,
     image: "/produit-4-5-6.webp",
   },
   {
@@ -37,7 +37,7 @@ export const products: Product[] = [
     name: "كؤوس الحجامة الإسلامية",
     subtitle: "قياس 5-6",
     refs: ["5", "6"],
-    price: 170,
+    price: 180,
     image: "/produit-5-6.webp",
   },
   {
@@ -47,6 +47,14 @@ export const products: Product[] = [
     refs: ["1", "2", "3", "4", "5", "6"],
     price: 190,
     image: "/produit-1-2-3-4-5-6.webp",
+  },
+  {
+    id: "p8",
+    name: "كؤوس الحجامة الإسلامية",
+    subtitle: "قياس 8×2",
+    refs: ["8×2"],
+    price: 230,
+    image: "/jdide.webp",
   },
   {
     id: "p6",
