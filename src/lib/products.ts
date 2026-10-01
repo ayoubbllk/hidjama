@@ -14,7 +14,7 @@ export const products: Product[] = [
     subtitle: "قياس 1",
     refs: ["1"],
     price: 220,
-    image: "/produit-1.jfif",
+    image: "/produit-1.webp",
   },
   {
     id: "p2",
@@ -22,7 +22,7 @@ export const products: Product[] = [
     subtitle: "قياس 1-2-3",
     refs: ["1", "2", "3"],
     price: 200,
-    image: "/produit-1-2-3.jfif",
+    image: "/produit-1-2-3.webp",
   },
   {
     id: "p3",
@@ -30,7 +30,7 @@ export const products: Product[] = [
     subtitle: "قياس 4-5-6",
     refs: ["4", "5", "6"],
     price: 180,
-    image: "/taille 4-5-6.jfif",
+    image: "/produit-4-5-6.webp",
   },
   {
     id: "p4",
@@ -38,7 +38,7 @@ export const products: Product[] = [
     subtitle: "قياس 5-6",
     refs: ["5", "6"],
     price: 170,
-    image: "/taille 6-5.jfif",
+    image: "/produit-5-6.webp",
   },
   {
     id: "p5",
@@ -46,7 +46,7 @@ export const products: Product[] = [
     subtitle: "قياس 1-2-3-4-5-6",
     refs: ["1", "2", "3", "4", "5", "6"],
     price: 190,
-    image: "/produit-1-2-3-4-5-6.jfif",
+    image: "/produit-1-2-3-4-5-6.webp",
   },
   {
     id: "p6",
@@ -54,7 +54,7 @@ export const products: Product[] = [
     subtitle: "مقاس 11 — علبة 100",
     refs: ["11"],
     price: 105,
-    image: "/lame-11.jfif",
+    image: "/lame-11.webp",
   },
   {
     id: "p7",
@@ -62,6 +62,6 @@ export const products: Product[] = [
     subtitle: "مقاس S — علبة 100",
     refs: ["S"],
     price: 1400,
-    image: "/gants-latex.jfif",
+    image: "/gants-latex.webp",
   },
 ];

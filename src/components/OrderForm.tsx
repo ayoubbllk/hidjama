@@ -101,8 +101,6 @@ export default function OrderForm() {
 
   return (
     <section id="order" className="py-20 bg-neutral-900 relative">
-      <div className="absolute inset-0 bg-[url('/hero-background.png')] opacity-5 bg-cover bg-center mix-blend-overlay"></div>
-
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="flex flex-col lg:flex-row gap-12 items-start">
           <div className="w-full lg:w-1/2 bg-neutral-950 border border-neutral-800 rounded-3xl p-6 md:p-10 shadow-2xl">
@@ -171,7 +169,7 @@ export default function OrderForm() {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-white shrink-0">
-                          <Image src={p.image} alt={p.name} fill className="object-contain p-1" />
+                          <Image src={p.image} alt={p.name} fill sizes="48px" className="object-contain p-1" />
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-white font-bold text-sm truncate">{p.name}</h4>

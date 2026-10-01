@@ -30,6 +30,7 @@ export default function Products() {
                   src={product.image}
                   alt={`${product.name} ${product.subtitle}`}
                   fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                   className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
                 />
               </div>

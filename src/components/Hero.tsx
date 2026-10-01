@@ -8,11 +8,12 @@ export default function Hero() {
       {/* Background Image & Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/hero-background.png"
+          src="/hero-background.webp"
           alt="كؤوس الحجامة"
           fill
-          className="object-cover object-center"
           priority
+          sizes="100vw"
+          className="object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-l from-neutral-950/95 via-neutral-950/80 to-neutral-950/40"></div>
       </div>
