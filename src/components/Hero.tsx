@@ -28,15 +28,15 @@ export default function Hero() {
             بيع بالجملة
           </div>
           
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-4">
-            بيع كؤوس الحجامة <br className="hidden md:block" />
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
+            كؤوس الحجامة الإسلامية بالجملة SW{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-green-light to-emerald-200">
-              أبوا عبد الرحمان
+              عند أبوا عبد الرحمان
             </span>
           </h1>
           
           <h2 className="text-xl md:text-2xl font-bold text-neutral-200 mb-6">
-            كؤوس حجامة بجودة عالية وأسعار بالجملة
+            جودة مناسبة للاستعمال المهني وأسعار بالجملة
           </h2>
           
           <p className="text-base md:text-lg text-neutral-400 mb-10 max-w-2xl leading-relaxed">

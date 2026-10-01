@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { useCart } from "@/lib/cart";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,21 +59,31 @@ export default function Navbar() {
             ))}
           </div>
           <Link
-            href="#order"
-            className="flex items-center gap-2 bg-brand-green hover:bg-brand-green-light text-white px-5 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-[0_0_15px_rgba(5,150,105,0.3)]"
+            href="/#order"
+            className="relative flex items-center gap-2 bg-brand-green hover:bg-brand-green-light text-white px-5 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-[0_0_15px_rgba(5,150,105,0.3)]"
           >
             <ShoppingCart className="w-4 h-4" />
-            <span>اطلب الآن</span>
+            <span>السلة</span>
+            {totalItems > 0 && (
+              <span className="min-w-5 h-5 px-1 rounded-full bg-amber-400 text-neutral-950 text-xs font-black flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
           </Link>
         </div>
 
         {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-4 md:hidden">
           <Link
-            href="#order"
-            className="flex items-center justify-center bg-brand-green text-white p-2 rounded-lg"
+            href="/#order"
+            className="relative flex items-center justify-center bg-brand-green text-white p-2 rounded-lg"
           >
             <ShoppingCart className="w-5 h-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-1.5 -start-1.5 min-w-5 h-5 px-1 rounded-full bg-amber-400 text-neutral-950 text-[10px] font-black flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
           </Link>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

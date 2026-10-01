@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/lib/cart";
 
 const cairo = Cairo({
   subsets: ["arabic"],
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className="scroll-smooth">
       <body className={`${cairo.variable} font-sans bg-neutral-950 text-neutral-50 antialiased`}>
-        {children}
+        <CartProvider>{children}</CartProvider>
       </body>
     </html>
   );

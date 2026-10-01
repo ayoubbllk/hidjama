@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Send, ShieldCheck, Truck, Package, Loader2 } from "lucide-react";
+import { Send, ShieldCheck, Truck, Package, Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { products } from "@/lib/products";
+import { MIN_ORDER_QTY, formatPrice, useCart } from "@/lib/cart";
 
 const wilayas = [
   "أدرار", "الشلف", "الأغواط", "أم البواقي", "باتنة", "بجاية", "بسكرة", "بشار", "البليدة", "البويرة",
@@ -20,43 +21,39 @@ const SCRIPT_URL =
 
 export default function OrderForm() {
   const router = useRouter();
+  const { quantities, setQuantity, totalItems, pricedTotal, hasUnpriced } = useCart();
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     wilaya: "",
   });
-  const [quantities, setQuantities] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [qtyError, setQtyError] = useState("");
 
-  const setQuantity = (id: string, value: string) => {
-    const cleaned = value.replace(/[^\d]/g, "");
-    setQuantities((prev) => ({ ...prev, [id]: cleaned }));
-  };
-
-  const qtyOf = (id: string) => {
-    const n = parseInt(quantities[id] || "0", 10);
-    return Number.isFinite(n) ? n : 0;
-  };
-
-  const totalItems = products.reduce((sum, p) => sum + qtyOf(p.id), 0);
-  const pricedTotal = products.reduce((sum, p) => sum + p.price * qtyOf(p.id), 0);
-  const hasUnpriced = products.some((p) => p.price === 0 && qtyOf(p.id) > 0);
+  const selected = products.filter((product) => (quantities[product.id] ?? 0) > 0);
+  const remaining = Math.max(0, MIN_ORDER_QTY - totalItems);
+  const canSubmit = totalItems >= MIN_ORDER_QTY;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (totalItems === 0) {
-      alert("الرجاء إدخال كمية لمنتج واحد على الأقل");
+    if (!canSubmit) {
+      setQtyError(
+        totalItems === 0
+          ? "أضف منتجات إلى السلة من البطاقات أعلاه."
+          : `الحد الأدنى للطلب هو ${MIN_ORDER_QTY} قطعة في المجموع. لديك حالياً ${totalItems}.`
+      );
       return;
     }
 
+    setQtyError("");
     setIsSubmitting(true);
 
-    const selected = products.filter((p) => qtyOf(p.id) > 0);
     const orderDetails = selected
-      .map((p) => {
-        const lineTotal = p.price > 0 ? `${p.price * qtyOf(p.id)} دج` : "حسب الطلب";
-        return `- ${p.name} (${p.subtitle}): ${qtyOf(p.id)} (المجموع: ${lineTotal})`;
+      .map((product) => {
+        const qty = quantities[product.id] ?? 0;
+        const lineTotal = product.price > 0 ? formatPrice(product.price * qty) : "حسب الطلب";
+        return `- ${product.name} (${product.subtitle}): ${qty} (المجموع: ${lineTotal})`;
       })
       .join("\n");
 
@@ -82,10 +79,10 @@ export default function OrderForm() {
         JSON.stringify({
           name: formData.name,
           wilaya: formData.wilaya,
-          lines: selected.map((p) => ({
-            label: `${p.name} — ${p.subtitle}`,
-            qty: qtyOf(p.id),
-            price: p.price,
+          lines: selected.map((product) => ({
+            label: `${product.name} — ${product.subtitle}`,
+            qty: quantities[product.id] ?? 0,
+            price: product.price,
           })),
           pricedTotal,
           hasUnpriced,
@@ -102,14 +99,147 @@ export default function OrderForm() {
   return (
     <section id="order" className="py-20 bg-neutral-900 relative">
       <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="flex flex-col lg:flex-row gap-12 items-start">
-          <div className="w-full lg:w-1/2 bg-neutral-950 border border-neutral-800 rounded-3xl p-6 md:p-10 shadow-2xl">
+        <div className="mb-10 max-w-3xl">
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-3">ملخص طلبك</h2>
+          <p className="text-neutral-400 text-lg">
+            راجع المنتجات والسعر، عدّل الكميات إن لزم، ثم أدخل معلوماتك. الحد الأدنى {MIN_ORDER_QTY} قطعة.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 md:p-8 shadow-2xl">
+            {selected.length === 0 ? (
+              <div className="text-center py-10">
+                <Package className="w-10 h-10 text-neutral-600 mx-auto mb-4" />
+                <p className="text-white font-bold text-lg mb-2">السلة فارغة</p>
+                <p className="text-neutral-400 mb-6">أضف المنتجات من البطاقات أعلاه.</p>
+                <a
+                  href="#products"
+                  className="inline-flex items-center justify-center bg-brand-green text-white px-6 py-3 rounded-xl font-bold"
+                >
+                  شاهد المنتجات
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selected.map((product) => {
+                  const qty = quantities[product.id] ?? 0;
+                  const lineTotal = product.price * qty;
+                  return (
+                    <div
+                      key={product.id}
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-2xl bg-neutral-900 border border-neutral-800"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white shrink-0">
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            sizes="64px"
+                            className="object-contain p-1"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-white font-bold text-sm truncate">{product.name}</h3>
+                          <p className="text-neutral-400 text-xs">{product.subtitle}</p>
+                          <p className="text-amber-300 font-black text-sm mt-1">
+                            {product.price > 0 ? formatPrice(product.price) : "حسب الطلب"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            aria-label={`إنقاص ${product.subtitle}`}
+                            onClick={() => setQuantity(product.id, qty - 1)}
+                            className="w-9 h-9 rounded-lg bg-neutral-950 border border-neutral-700 text-white flex items-center justify-center hover:border-amber-400"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            aria-label={`كمية ${product.name}`}
+                            className="w-16 h-9 bg-neutral-950 border border-neutral-700 rounded-lg text-center text-white font-black focus:outline-none focus:border-amber-400"
+                            value={String(qty)}
+                            onChange={(event) => {
+                              const next = parseInt(event.target.value.replace(/[^\d]/g, "") || "0", 10);
+                              setQuantity(product.id, Number.isFinite(next) ? next : 0);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            aria-label={`زيادة ${product.subtitle}`}
+                            onClick={() => setQuantity(product.id, qty + 1)}
+                            className="w-9 h-9 rounded-lg bg-neutral-950 border border-neutral-700 text-white flex items-center justify-center hover:border-amber-400"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="text-left min-w-24">
+                          <p className="text-amber-300 font-black">
+                            {product.price > 0 ? formatPrice(lineTotal) : "حسب الطلب"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={`حذف ${product.subtitle}`}
+                          onClick={() => setQuantity(product.id, 0)}
+                          className="w-9 h-9 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 mt-6">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-neutral-300 font-bold">الكمية الإجمالية</span>
+                <span className={`font-black text-lg ${canSubmit ? "text-amber-300" : "text-white"}`}>
+                  {totalItems} / {MIN_ORDER_QTY}
+                </span>
+              </div>
+              <div className="h-2.5 bg-neutral-800 rounded-full overflow-hidden mb-3">
+                <div
+                  className={`h-full rounded-full transition-all ${canSubmit ? "bg-amber-400" : "bg-amber-400/70"}`}
+                  style={{ width: `${Math.min(100, (totalItems / MIN_ORDER_QTY) * 100)}%` }}
+                />
+              </div>
+              <p className={`text-sm font-bold mb-4 ${canSubmit ? "text-amber-300" : "text-neutral-400"}`}>
+                {canSubmit
+                  ? "الكمية كافية لتأكيد الطلب"
+                  : `أضف ${remaining} قطعة أخرى. المجموع يجب أن يكون ${MIN_ORDER_QTY} أو أكثر.`}
+              </p>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-neutral-400">مصاريف التوصيل</span>
+                <span className="text-neutral-200 text-sm font-bold">تُحدد حسب الولاية</span>
+              </div>
+              <div className="h-px bg-neutral-800 my-4" />
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-lg font-bold text-white">المجموع</span>
+                <span className="text-3xl md:text-4xl font-black text-amber-300">
+                  {formatPrice(pricedTotal)}
+                  {hasUnpriced ? " + حسب الطلب" : ""}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6 md:p-8 shadow-2xl">
             <div className="mb-8">
-              <h2 className="text-3xl font-black text-white mb-2">تأكيد طلبك</h2>
+              <h3 className="text-2xl font-black text-white mb-2">معلومات التوصيل</h3>
               <p className="text-neutral-400">املأ المعلومات وسنقوم بالتواصل معك في أقرب وقت</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-bold text-neutral-300 mb-2">الاسم الكامل *</label>
                 <input
@@ -154,69 +284,17 @@ export default function OrderForm() {
                 </select>
               </div>
 
-              <div className="pt-4">
-                <label className="block text-sm font-bold text-neutral-300 mb-1">اختر المنتجات والكميات *</label>
-                <p className="text-xs text-neutral-500 mb-4">اكتب الكمية المطلوبة لكل منتج. اترك الحقل فارغاً إذا لم ترد المنتج.</p>
-                <div className="space-y-3">
-                  {products.map((p) => (
-                    <div
-                      key={p.id}
-                      className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${
-                        qtyOf(p.id) > 0
-                          ? "bg-brand-green/10 border-brand-green"
-                          : "bg-neutral-900 border-neutral-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-white shrink-0">
-                          <Image src={p.image} alt={p.name} fill sizes="48px" className="object-contain p-1" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-white font-bold text-sm truncate">{p.name}</h4>
-                          <p className="text-neutral-400 text-xs">{p.subtitle}</p>
-                          <p className="text-brand-green-light text-xs font-bold">
-                            {p.price > 0 ? `${p.price} دج` : "حسب الطلب"}
-                          </p>
-                        </div>
-                      </div>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="0"
-                        aria-label={`كمية ${p.name}`}
-                        className="w-20 shrink-0 bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2.5 text-center text-white font-bold focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green"
-                        value={quantities[p.id] ?? ""}
-                        onChange={(e) => setQuantity(p.id, e.target.value)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-neutral-900 rounded-xl p-5 border border-neutral-800 mt-8">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-neutral-400">إجمالي الكمية:</span>
-                  <span className="text-white font-bold">{totalItems}</span>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-neutral-400">مصاريف التوصيل:</span>
-                  <span className="text-brand-green-light text-sm font-bold">يتم تحديدها حسب الولاية</span>
-                </div>
-                <div className="h-px bg-neutral-800 my-4"></div>
-                <div className="flex justify-between items-center gap-4">
-                  <span className="text-lg font-bold text-white">المجموع الكلي:</span>
-                  <span className="text-2xl md:text-3xl font-black text-brand-green-light text-left">
-                    {pricedTotal} دج{hasUnpriced ? " + حسب الطلب" : ""}
-                  </span>
-                </div>
-              </div>
+              {qtyError && (
+                <p className="text-amber-300 text-sm font-bold bg-amber-400/10 border border-amber-400/30 rounded-xl px-4 py-3">
+                  {qtyError}
+                </p>
+              )}
 
               <button
                 type="submit"
-                disabled={totalItems === 0 || isSubmitting}
-                className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold text-lg transition-all transform mt-6 ${
-                  totalItems > 0
+                disabled={!canSubmit || isSubmitting}
+                className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold text-lg transition-all transform ${
+                  canSubmit
                     ? "bg-brand-green hover:bg-brand-green-light text-white hover:-translate-y-1 shadow-[0_10px_40px_-10px_rgba(5,150,105,0.5)]"
                     : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
                 }`}
@@ -234,48 +312,44 @@ export default function OrderForm() {
                 )}
               </button>
 
-              <p className="text-center text-xs text-neutral-500 mt-4 flex items-center justify-center gap-1.5">
+              <p className="text-center text-xs text-neutral-500 flex items-center justify-center gap-1.5">
                 <ShieldCheck className="w-4 h-4" />
                 معلوماتك محمية وآمنة
               </p>
-            </form>
+            </div>
           </div>
+        </form>
 
-          <div id="why-us" className="w-full lg:w-1/2 pt-10 lg:pt-20">
-            <h3 className="text-3xl md:text-4xl font-black text-white mb-10">لماذا تختارنا ؟</h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
-                <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
-                  <Package className="w-6 h-6 text-brand-green-light" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-2">أسعار الجملة</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">أسعار مناسبة للتجار والمهنيين.</p>
+        <div id="why-us" className="pt-16">
+          <h3 className="text-3xl md:text-4xl font-black text-white mb-10">لماذا تختارنا ؟</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
+              <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
+                <Package className="w-6 h-6 text-brand-green-light" />
               </div>
-
-              <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
-                <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
-                  <ShieldCheck className="w-6 h-6 text-brand-green-light" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-2">جودة مضمونة</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">منتجات مناسبة للاستعمال المهني.</p>
+              <h4 className="text-xl font-bold text-white mb-2">أسعار الجملة</h4>
+              <p className="text-neutral-400 text-sm leading-relaxed">أسعار مناسبة للتجار والمهنيين.</p>
+            </div>
+            <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
+              <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
+                <ShieldCheck className="w-6 h-6 text-brand-green-light" />
               </div>
-
-              <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
-                <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
-                  <Truck className="w-6 h-6 text-brand-green-light" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-2">توصيل سريع</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">التوصيل متوفر إلى جميع ولايات الجزائر.</p>
+              <h4 className="text-xl font-bold text-white mb-2">جودة مضمونة</h4>
+              <p className="text-neutral-400 text-sm leading-relaxed">منتجات مناسبة للاستعمال المهني.</p>
+            </div>
+            <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
+              <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
+                <Truck className="w-6 h-6 text-brand-green-light" />
               </div>
-
-              <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
-                <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
-                  <Send className="w-6 h-6 text-brand-green-light" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-2">طلب سهل</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">اطلب مباشرة دون إنشاء حساب.</p>
+              <h4 className="text-xl font-bold text-white mb-2">توصيل سريع</h4>
+              <p className="text-neutral-400 text-sm leading-relaxed">التوصيل متوفر إلى جميع ولايات الجزائر.</p>
+            </div>
+            <div className="bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
+              <div className="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center mb-4">
+                <Send className="w-6 h-6 text-brand-green-light" />
               </div>
+              <h4 className="text-xl font-bold text-white mb-2">طلب سهل</h4>
+              <p className="text-neutral-400 text-sm leading-relaxed">أضف إلى السلة مباشرة دون إنشاء حساب.</p>
             </div>
           </div>
         </div>

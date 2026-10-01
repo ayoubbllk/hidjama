@@ -37,7 +37,7 @@ export function FinalCTA() {
       <div className="container mx-auto px-4 text-center relative z-10">
         <h2 className="text-4xl md:text-6xl font-black text-white mb-6">جاهز لطلب كؤوس الحجامة؟</h2>
         <p className="text-xl text-neutral-400 mb-10 max-w-2xl mx-auto">
-          اختر المقاس المناسب وأرسل طلبك الآن
+          أضف المنتجات إلى السلة ثم أكّد طلبك من الملخص
         </p>
         <a
           href="#order"
