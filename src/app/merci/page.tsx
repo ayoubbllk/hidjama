@@ -5,11 +5,12 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 type SavedOrder = {
   name: string;
   wilaya: string;
-  lines: { label: string; qty: number; price: number }[];
+  lines: { id?: string; label: string; qty: number; price: number }[];
   pricedTotal: number;
   hasUnpriced: boolean;
 };
@@ -21,7 +22,23 @@ export default function MerciPage() {
     const raw = sessionStorage.getItem("hidjama-order");
     if (!raw) return;
     try {
-      setOrder(JSON.parse(raw) as SavedOrder);
+      const saved = JSON.parse(raw) as SavedOrder;
+      setOrder(saved);
+      if (sessionStorage.getItem("hidjama-purchase-tracked") === "1") return;
+      const numItems = saved.lines.reduce((sum, line) => sum + line.qty, 0);
+      const tracked = trackMetaEvent("Purchase", {
+        value: saved.pricedTotal,
+        currency: "DZD",
+        content_type: "product",
+        content_ids: saved.lines.map((line) => line.id || line.label),
+        contents: saved.lines.map((line) => ({
+          id: line.id || line.label,
+          quantity: line.qty,
+          item_price: line.price,
+        })),
+        num_items: numItems,
+      });
+      if (tracked) sessionStorage.setItem("hidjama-purchase-tracked", "1");
     } catch {
       setOrder(null);
     }

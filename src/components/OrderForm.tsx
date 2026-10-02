@@ -74,12 +74,14 @@ export default function OrderForm() {
         body: JSON.stringify(payload),
       });
 
+      sessionStorage.removeItem("hidjama-purchase-tracked");
       sessionStorage.setItem(
         "hidjama-order",
         JSON.stringify({
           name: formData.name,
           wilaya: formData.wilaya,
           lines: selected.map((product) => ({
+            id: product.id,
             label: `${product.name} — ${product.subtitle}`,
             qty: quantities[product.id] ?? 0,
             price: product.price,
